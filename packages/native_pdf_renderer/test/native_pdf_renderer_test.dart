@@ -148,7 +148,8 @@ void main() {
             'crop_x': null,
             'crop_y': null,
             'crop_height': null,
-            'crop_width': null
+            'crop_width': null,
+            'quality': 100,
           },
         ),
       ]);
@@ -158,6 +159,7 @@ void main() {
       expect(pageImage.width, width);
       expect(pageImage.height, height);
       expect(pageImage.pageNumber, page.pageNumber);
+      expect(pageImage.quality, 100);
     });
 
     test('close', () async {

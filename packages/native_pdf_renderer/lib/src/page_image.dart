@@ -11,6 +11,7 @@ class PdfPageImage {
     required this.height,
     required this.bytes,
     required this.format,
+    required this.quality,
   });
 
   static const MethodChannel _channel =
@@ -35,6 +36,9 @@ class PdfPageImage {
   /// Target compression format
   final PdfPageFormat format;
 
+  /// Target compression format quality
+  final int quality;
+
   /// Render a full image of specified PDF file.
   ///
   /// [width], [height] specify resolution to render in pixels.
@@ -42,6 +46,7 @@ class PdfPageImage {
   /// [backgroundColor] property like a hex string ('#000000')
   /// [format] - image type, all types can be seen here [PdfPageFormat]
   /// [crop] - render only the necessary part of the image
+  /// [quality] - hint to the JPEG and WebP compression algorithms (0-100)
   static Future<PdfPageImage?> _render({
     required String? pageId,
     required int pageNumber,
@@ -50,6 +55,7 @@ class PdfPageImage {
     required PdfPageFormat format,
     required String? backgroundColor,
     required Rect? crop,
+    required int quality,
   }) async {
     if (format == PdfPageFormat.WEBP &&
         (Platform.isIOS || Platform.isWindows)) {
@@ -72,6 +78,7 @@ class PdfPageImage {
       'crop_y': crop?.top.toInt(),
       'crop_height': crop?.height.toInt(),
       'crop_width': crop?.width.toInt(),
+      'quality': quality,
     });
 
     if (!(obj is Map<dynamic, dynamic>)) {
@@ -79,7 +86,15 @@ class PdfPageImage {
     }
 
     final retWidth = obj['width'] as int?, retHeight = obj['height'] as int?;
-    final pixels = Uint8List.fromList(obj['data']);
+    late final Uint8List pixels;
+    if (Platform.isAndroid || Platform.isIOS) {
+      final file = File(obj['path'] as String);
+      // await Future.delayed(const Duration(milliseconds: 300));
+      pixels = await file.readAsBytes();
+      await file.delete();
+    } else {
+      pixels = Uint8List.fromList(obj['data']);
+    }
 
     return PdfPageImage._(
       id: pageId,
@@ -88,6 +103,7 @@ class PdfPageImage {
       height: retHeight,
       bytes: pixels,
       format: format,
+      quality: quality,
     );
   }
 

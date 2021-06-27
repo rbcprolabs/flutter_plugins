@@ -3,6 +3,7 @@ package io.scer.native_pdf_renderer.utils
 import android.graphics.Bitmap
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStream
 
 fun InputStream.toFile(file: File) {
@@ -12,9 +13,10 @@ fun InputStream.toFile(file: File) {
 /**
  * Save bitmap to file
  */
-fun Bitmap.toFile(file: File): File {
-    val stream = file.outputStream()
-    this.compress(Bitmap.CompressFormat.PNG, 100, stream)
+fun Bitmap.toFile(file: File, format: Int, quality: Int = 100): File {
+    val stream = FileOutputStream(file, false)
+    val compressFormat = parseCompressFormat(format)
+    this.compress(compressFormat, quality, stream)
     stream.flush()
     stream.close()
     return file
@@ -25,13 +27,7 @@ fun Bitmap.toFile(file: File): File {
  */
 fun Bitmap.toByteArray(format: Int): ByteArray {
     val stream = ByteArrayOutputStream()
-    val compressFormat: Bitmap.CompressFormat = when(format) {
-        0 -> Bitmap.CompressFormat.JPEG
-        1 -> Bitmap.CompressFormat.PNG
-        2 -> Bitmap.CompressFormat.WEBP
-        else -> Bitmap.CompressFormat.JPEG
-    }
-
+    val compressFormat = parseCompressFormat(format)
     this.compress(compressFormat, 100, stream)
     return stream.toByteArray()
 }

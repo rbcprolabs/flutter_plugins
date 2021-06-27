@@ -180,9 +180,21 @@ class NativePdfRendererPlugin : FlutterPlugin, MethodCallHandler {
                 val cropH = if (crop) call.argument<Int>("crop_height")!! else 0;
                 val cropW = if (crop) call.argument<Int>("crop_width")!! else 0;
 
+                val quality = call.argument<Int>("quality") ?: 100
+
                 val page = pages.get(pageId)
 
-                val results = page.render(width, height, color, format, crop, cropX, cropY, cropW, cropH).toMap
+                val tempOutFileExtension = when (format) {
+                    0 -> "jpg"
+                    1 -> "png"
+                    2 -> "webp"
+                    else -> "jpg"
+                }
+                val tempOutFolder = File(binding.applicationContext.cacheDir, "native_pdf_renderer_cache")
+                tempOutFolder.mkdirs()
+                val tempOutFile = File(tempOutFolder, "$randomFilename.$tempOutFileExtension")
+
+                val results = page.render(tempOutFile, width, height, color, format, crop, cropX, cropY, cropW, cropH, quality).toMap
                 result.success(results)
 
             } catch (e: Exception) {
